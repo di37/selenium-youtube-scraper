@@ -1,4 +1,6 @@
-import pandas as pd
+import smtplib
+import json
+import os
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
@@ -51,6 +53,25 @@ def parse_video(video):
     'Description': description
   }
 
+def send_email(body):
+  EMAIL_ADDRESS = 'd.isham.993@gmail.com'
+  EMAIL_PASSWORD = os.environ['GMAIL_PASS']
+  try:
+    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+      smtp.ehlo()
+      
+      smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
+
+      subject = 'YouTube top 10 trending videos!'
+
+      msg = f'''Subject: {subject}\n\n{body}'''
+
+      smtp.sendmail(EMAIL_ADDRESS, ['d.isham.ai93@gmail.com'], msg)
+      smtp.close()
+
+  except:
+    print('Something went wrong.')
+
 if __name__ == '__main__':
   print('Creating driver')
   driver = get_driver()
@@ -62,8 +83,8 @@ if __name__ == '__main__':
 
   print('Parsing top 10 videos')
   videos_data = [parse_video(video) for video in videos[:10]]
+
+  print('Send the results over email.')
+  body = json.dumps(videos_data, indent=2)
   
-  print('Save the data to csv')
-  videos_df = pd.DataFrame(videos_data)
-  print(videos_df)
-  videos_df.to_csv('trending.csv', index=None)
+  send_email(body)
